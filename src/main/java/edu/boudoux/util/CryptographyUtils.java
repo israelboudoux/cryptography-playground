@@ -154,15 +154,20 @@ public final class CryptographyUtils {
     }
 
     public static void main(String[] args) {
-        //testIsPrime2();
-        //testMmi();
-        //System.out.println(mmi2(new BigInteger("17"), new BigInteger("27766").multiply(new BigInteger("31280"))));
+        BigInteger p = new BigInteger("24805"); // 24805
+        BigInteger q = new BigInteger("30933"); // 30933
+        BigInteger e = new BigInteger("17");
+        BigInteger n = p.multiply(q);
+        BigInteger totient = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
+        System.out.println("GCD: " + gcd(e, totient));
 
-        System.out.println(gcd(new BigInteger("17"), new BigInteger("24804")));
-        System.out.println(gcd(new BigInteger("17"), new BigInteger("30932")));
-        BigInteger cipher = powerMod(new BigInteger("16225"), new BigInteger("17"), new BigInteger("767293065"));
+        BigInteger d = mmi2(e, totient);
+        System.out.println("d: " + d + ", n: " + n);
+
+        BigInteger cipher = powerMod(new BigInteger("16225"), e, n);
         System.out.println(cipher);
-        BigInteger plain = powerMod(new BigInteger("431539240"), new BigInteger("676974113"), new BigInteger("767293065"));
+
+        BigInteger plain = powerMod(cipher, d, n);
         System.out.println(plain);
     }
 
@@ -361,11 +366,11 @@ public final class CryptographyUtils {
 
     /**
      *
-     * @param plainTextRep
+     * @param value
      * @param padding can be null. Represents the padding, if any.
      * @return
      */
-    public static String toString(BigInteger plainTextRep, BigInteger padding) {
+    public static String toString(BigInteger value, BigInteger padding) {
         if (padding == null) {
             padding = BigInteger.ZERO;
         }
@@ -373,10 +378,10 @@ public final class CryptographyUtils {
         StringBuilder sbText = new StringBuilder();
         BigInteger mask = new BigInteger("ff", 16);
         byte[] character = new byte[1];
-        while (!plainTextRep.equals(padding)) {
-            character[0] = plainTextRep.and(mask).byteValue();
+        while (!value.equals(padding)) {
+            character[0] = value.and(mask).byteValue();
             sbText.append(new String(character));
-            plainTextRep = plainTextRep.shiftRight(8);
+            value = value.shiftRight(8);
         }
 
         return sbText.toString();
