@@ -1,6 +1,7 @@
 package edu.boudoux.util;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -105,7 +106,7 @@ public final class CryptographyUtils {
     }
 
     public static boolean greaterThanOrEqual(BigInteger a, BigInteger b) {
-        return a.compareTo(b) == 0;
+        return a.compareTo(b) >= 0;
     }
 
     public static boolean lowerThan(BigInteger a, BigInteger b) {
@@ -113,7 +114,7 @@ public final class CryptographyUtils {
     }
 
     public static BigInteger mmi2(BigInteger a, BigInteger b) {
-        assert BigInteger.ZERO.compareTo(b) > 0;
+        assert greaterThan(b, BigInteger.ZERO);
 
         BigInteger r = a.remainder(b);
         BigInteger x = BigInteger.ONE, y = r.subtract(a).divide(b);
@@ -154,21 +155,28 @@ public final class CryptographyUtils {
     }
 
     public static void main(String[] args) {
-        BigInteger p = new BigInteger("24805"); // 24805
-        BigInteger q = new BigInteger("30933"); // 30933
+        // 197 / q: 219
+        System.out.println(isPrime2(new BigInteger("219")));
+
+        BigInteger p = new BigInteger("223");
+        BigInteger q = new BigInteger("197");
         BigInteger e = new BigInteger("17");
+        BigInteger paddedPlainText = new BigInteger("32865");
+
         BigInteger n = p.multiply(q);
         BigInteger totient = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
-        System.out.println("GCD: " + gcd(e, totient));
+
+         if(gcd(e, totient).longValue() != 1 || gcd(e, p.subtract(BigInteger.ONE)).longValue() != 1 || gcd(e, q.subtract(BigInteger.ONE)).longValue() != 1)
+             throw new IllegalStateException("GCD error");
 
         BigInteger d = mmi2(e, totient);
         System.out.println("d: " + d + ", n: " + n);
 
-        BigInteger cipher = powerMod(new BigInteger("16225"), e, n);
+        BigInteger cipher = powerMod(paddedPlainText, e, n);
         System.out.println(cipher);
 
         BigInteger plain = powerMod(cipher, d, n);
-        System.out.println(plain);
+        System.out.println("===> " + plain.equals(paddedPlainText) + " (" + plain + ")");
     }
 
     private static void testIsPrime2() {
@@ -207,10 +215,10 @@ public final class CryptographyUtils {
             }
         }
 
-        IntStream intStream = IntStream.range(4,first1000Primes.get(first1000Primes.size() - 1));
-        intStream.filter(n -> ! first1000Primes.contains(n)).forEach(evenNumber -> {
-            if (isPrime2(BigInteger.valueOf(evenNumber))) {
-                System.err.printf("Test for non-primes failed for %d\n",evenNumber);
+        IntStream intStream = IntStream.range(4, first1000Primes.get(first1000Primes.size() - 1));
+        intStream.filter(n -> ! first1000Primes.contains(n)).forEach(n -> {
+            if (isPrime2(BigInteger.valueOf(n))) {
+                System.err.printf("Test for non-primes failed for %d\n", n);
                 System.exit(1);
             }
         });
@@ -229,6 +237,7 @@ public final class CryptographyUtils {
      */
     public static BigInteger powerMod(BigInteger base, BigInteger power, BigInteger mod) {
         BigInteger result = new BigInteger("1");
+        long originalPower = power.longValue();
 
         while (greaterThan(power, BigInteger.ZERO)) {
             if (power.and(BigInteger.ONE).equals(BigInteger.ONE)) {
@@ -355,7 +364,7 @@ public final class CryptographyUtils {
     }
 
     public static BigInteger toBigInteger(String plainTextInput, BigInteger padding) {
-        byte[] content = plainTextInput.getBytes();
+        byte[] content = plainTextInput.getBytes(StandardCharsets.UTF_8);
         BigInteger text = padding;
         for (byte b : content) {
             text = text.shiftLeft(8).add(new BigInteger(String.valueOf(b)));
@@ -365,12 +374,12 @@ public final class CryptographyUtils {
     }
 
     /**
-     *
      * @param value
      * @param padding can be null. Represents the padding, if any.
+     * @param modulo
      * @return
      */
-    public static String toString(BigInteger value, BigInteger padding) {
+    public static String toString(BigInteger value, BigInteger padding, BigInteger modulo) {
         if (padding == null) {
             padding = BigInteger.ZERO;
         }
@@ -378,10 +387,16 @@ public final class CryptographyUtils {
         StringBuilder sbText = new StringBuilder();
         BigInteger mask = new BigInteger("ff", 16);
         byte[] character = new byte[1];
+        int maxIterations = modulo.bitCount();
+        int i = 1;
         while (!value.equals(padding)) {
             character[0] = value.and(mask).byteValue();
             sbText.append(new String(character));
             value = value.shiftRight(8);
+
+            if(i++ > maxIterations) {
+                throw new IllegalStateException("The conversion failed!");
+            }
         }
 
         return sbText.toString();
