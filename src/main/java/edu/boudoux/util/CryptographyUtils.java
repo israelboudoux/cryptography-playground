@@ -100,6 +100,10 @@ public final class CryptographyUtils {
         return a.compareTo(b) > 0;
     }
 
+    public static boolean lowerThanOrEqual(BigInteger a, BigInteger b) {
+        return a.compareTo(b) <= 0;
+    }
+
     public static boolean greaterThanOrEqual(BigInteger a, BigInteger b) {
         return a.compareTo(b) == 0;
     }
@@ -153,8 +157,13 @@ public final class CryptographyUtils {
         //testIsPrime2();
         //testMmi();
         //System.out.println(mmi2(new BigInteger("17"), new BigInteger("27766").multiply(new BigInteger("31280"))));
-        System.out.println(gcd(new BigInteger("17"), new BigInteger("27766")));
-        System.out.println(gcd(new BigInteger("17"), new BigInteger("31280")));
+
+        System.out.println(gcd(new BigInteger("17"), new BigInteger("24804")));
+        System.out.println(gcd(new BigInteger("17"), new BigInteger("30932")));
+        BigInteger cipher = powerMod(new BigInteger("16225"), new BigInteger("17"), new BigInteger("767293065"));
+        System.out.println(cipher);
+        BigInteger plain = powerMod(new BigInteger("431539240"), new BigInteger("676974113"), new BigInteger("767293065"));
+        System.out.println(plain);
     }
 
     private static void testIsPrime2() {
@@ -213,14 +222,14 @@ public final class CryptographyUtils {
      * @param mod
      * @return
      */
-    public static BigInteger powerMod(BigInteger base, long power, BigInteger mod) {
+    public static BigInteger powerMod(BigInteger base, BigInteger power, BigInteger mod) {
         BigInteger result = new BigInteger("1");
 
-        while (power > 0) {
-            if ((power & 0x1) == 1) {
+        while (greaterThan(power, BigInteger.ZERO)) {
+            if (power.and(BigInteger.ONE).equals(BigInteger.ONE)) {
                 result = result.multiply(base).remainder(mod);
             }
-            power >>= 1;
+            power = power.shiftRight(1);
             base = base.multiply(base).remainder(mod);
         }
 
@@ -246,24 +255,25 @@ public final class CryptographyUtils {
         // 1 < probe < (p - 1)
         Random random = new Random(pMinusOne.longValue());
 
-        int q = oddMultiplier(pMinusOne.longValue());
-        int k = (int) (pMinusOne.longValue() / Math.pow(2,q));
+        int q = oddMultiplier(pMinusOne);
+        BigInteger k = pMinusOne.divide(BigInteger.TWO.pow(q));
 
         int isPrime = 0x0;
         int maxProbes = 5;
         long[] probeList = random.longs(maxProbes,2, p.longValue()).toArray();
-        BigInteger calc,bdProbe;
+        BigInteger calc, bdProbe, _2power;
 
         for(long probe: probeList) {
             bdProbe = BigInteger.valueOf(probe);
-            for (int i = 0,_2power = 1; i <= q; i++) {
-                calc = powerMod(bdProbe, _2power * k, p);
+            _2power = BigInteger.ONE;
+            for (int i = 0; i <= q; i++) {
+                calc = powerMod(bdProbe, _2power.multiply(k), p);
                 if (calc.longValue() == 1 || calc.equals(pMinusOne)) {
                     isPrime = isPrime << 1 | 0x1;
                     break;
                 }
 
-                _2power *= 2;
+                _2power = _2power.multiply(BigInteger.TWO);
             }
 
             if (isPrime == 0x0) {
@@ -280,16 +290,16 @@ public final class CryptographyUtils {
      * @param value
      * @return
      */
-    private static int oddMultiplier(long value) {
-        if (value <= 0) {
+    private static int oddMultiplier(BigInteger value) {
+        if (lowerThanOrEqual(value, BigInteger.ZERO)) {
             return 0;
         }
 
         int result = 0;
 
-        while ((value & 0x1) == 0) {
+        while (value.and(BigInteger.ONE).equals(BigInteger.ZERO)) {
             result++;
-            value >>= 1;
+            value = value.shiftRight(1);
         }
 
         return result;
