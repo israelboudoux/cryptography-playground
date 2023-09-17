@@ -1,6 +1,6 @@
 package edu.boudoux.rsa;
 
-import edu.boudoux.util.CryptographyUtils;
+import edu.boudoux.utils.CryptographyUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.math.BigInteger;
@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.function.Predicate;
-import static edu.boudoux.util.CryptographyUtils.*;
+import static edu.boudoux.utils.CryptographyUtils.*;
 
 public class SchoolBookRSA {
 
@@ -19,8 +19,6 @@ public class SchoolBookRSA {
     public record PrivKey (BigInteger d, BigInteger n) {}
 
     private static final Random RANDOMIZER = new SecureRandom();
-
-    private static final BigInteger PADDING = new BigInteger("10000000", 2);
 
     /**
      * This is the default 'e' selected, but it could be any prime number that satisfies
@@ -74,8 +72,6 @@ public class SchoolBookRSA {
 
         BigInteger d = generatePrivateComponent(e, totient);
 
-        System.out.printf("[DEBUG] p: %s / q: %s%n", p, q);
-
         return Map.entry(new PubKey(e, n), new PrivKey(d, n));
     }
 
@@ -84,7 +80,7 @@ public class SchoolBookRSA {
     }
 
     private static boolean validatePlainText(String v, int keySize) {
-        int maxPlainTextLength = (keySize - 8) / 8; // subtracting 8 bits reserved for padding
+        int maxPlainTextLength = keySize / 8;
         return !v.isEmpty() && v.getBytes(StandardCharsets.UTF_8).length <= maxPlainTextLength;
     }
 
@@ -97,14 +93,14 @@ public class SchoolBookRSA {
     }
 
     public static BigInteger cipherPlainText(String plainTextInput, BigInteger e, BigInteger n) {
-        BigInteger text = CryptographyUtils.toBigInteger(plainTextInput, PADDING);
+        BigInteger text = CryptographyUtils.toBigInteger(plainTextInput);
 
         return CryptographyUtils.powerMod(text, e, n);
     }
 
     public static String decipher(BigInteger cypheredText, BigInteger privateKey, BigInteger n) {
         BigInteger plainTextRep = CryptographyUtils.powerMod(cypheredText, privateKey, n);
-        return CryptographyUtils.toString(plainTextRep, PADDING, n);
+        return CryptographyUtils.toString(plainTextRep, n);
     }
 
     public static void main(String[] args) {
@@ -129,9 +125,9 @@ public class SchoolBookRSA {
         BigInteger d = keyComponents.getValue().d();
 
         BigInteger cipheredTextRep = cipherPlainText(plainTextInput, e, n);
-        String cipheredText = CryptographyUtils.toString(cipheredTextRep, null, n);
+        String cipheredText = CryptographyUtils.toString(cipheredTextRep, n);
 
-        BigInteger plainTextRep = CryptographyUtils.toBigInteger(plainTextInput, PADDING);
+        BigInteger plainTextRep = CryptographyUtils.toBigInteger(plainTextInput);
         System.out.printf("\nPlain text (int rep): %s\n\n", plainTextRep);
         System.out.printf("Public components [e: %s, n: %s]\n", e, n);
         System.out.printf("Private components [d: %s, n: %s]\n", d, n);
