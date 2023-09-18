@@ -41,7 +41,7 @@ public class SchoolBookRSA {
         BigInteger initialValue = new BigInteger(String.format("11%s1", "0".repeat(totalBits - 3)), 2);
         BigInteger genPrime;
         do {
-            String shaResult = DigestUtils.sha512Hex(new Date().toString() + RANDOMIZER.nextLong()).repeat(1);
+            String shaResult = DigestUtils.sha512Hex(new Date().toString() + RANDOMIZER.nextLong()).repeat(totalBits * 2 / 8);
             String randomNumber = shaResult.substring(0, totalBits);
 
             genPrime = initialValue.xor(new BigInteger(randomNumber, 16).and(totalBitsSet));
@@ -76,7 +76,7 @@ public class SchoolBookRSA {
     }
 
     private static boolean validateKeySize(int keySize) {
-        return keySize >= 16 && keySize <= 1024 && keySize % 8 == 0;
+        return keySize >= 8 && keySize <= 1024 && keySize % 8 == 0;
     }
 
     private static boolean validatePlainText(String v, int keySize) {
@@ -106,7 +106,7 @@ public class SchoolBookRSA {
     public static void main(String[] args) {
         System.out.println("*** School book RSA ***");
 
-        String totalBitsModuloInput = requestInput("Enter the Total Bits for the RSA modulo (min: 16/max: 1024): ", (String s) -> {
+        String totalBitsModuloInput = requestInput("Enter the Total Bits for the RSA modulo (min: 8/max: 1024): ", (String s) -> {
             try {
                 int v = Integer.parseInt(s);
                 return validateKeySize(v);
@@ -114,7 +114,7 @@ public class SchoolBookRSA {
             return false;
         });
         int totalBitsModulo = Integer.parseInt(totalBitsModuloInput);
-        int maxPlainTextLength = (totalBitsModulo - 8) / 8;
+        int maxPlainTextLength = totalBitsModulo / 8;
 
         String plainTextInput = requestInput(String.format("Enter the plain text (max len: %d): ", maxPlainTextLength),
                 (String s) -> validatePlainText(s, totalBitsModulo));
@@ -135,7 +135,7 @@ public class SchoolBookRSA {
 
         System.out.println("Deciphering...");
         // we will assume 'n' is already supplied, and the cipher text as well
-        String privateKey = requestInput("\nEnter the private key: ",
+        String privateKey = requestInput("\nEnter the private key (the 'd' component): ",
                 (String s) -> !s.isEmpty() && n.compareTo(BigInteger.valueOf(s.length())) > 0);
         String plainText = decipher(cipheredTextRep, new BigInteger(privateKey), n);
 

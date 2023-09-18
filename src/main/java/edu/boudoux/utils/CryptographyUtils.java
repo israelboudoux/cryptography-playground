@@ -154,31 +154,6 @@ public final class CryptographyUtils {
         return result;
     }
 
-    public static void main(String[] args) {
-        // 197 / q: 219
-        System.out.println(isPrime2(new BigInteger("219")));
-
-        BigInteger p = new BigInteger("223");
-        BigInteger q = new BigInteger("197");
-        BigInteger e = new BigInteger("17");
-        BigInteger paddedPlainText = new BigInteger("32865");
-
-        BigInteger n = p.multiply(q);
-        BigInteger totient = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
-
-         if(gcd(e, totient).longValue() != 1 || gcd(e, p.subtract(BigInteger.ONE)).longValue() != 1 || gcd(e, q.subtract(BigInteger.ONE)).longValue() != 1)
-             throw new IllegalStateException("GCD error");
-
-        BigInteger d = mmi2(e, totient);
-        System.out.println("d: " + d + ", n: " + n);
-
-        BigInteger cipher = powerMod(paddedPlainText, e, n);
-        System.out.println(cipher);
-
-        BigInteger plain = powerMod(cipher, d, n);
-        System.out.println("===> " + plain.equals(paddedPlainText) + " (" + plain + ")");
-    }
-
     /**
      * This method calculates the power mod of a number using an efficient algorithm. It can be used to calculate the
      * power mod of very big numbers efficiently.
@@ -227,7 +202,7 @@ public final class CryptographyUtils {
 
         int isPrime = 0x0;
         int maxProbes = 5;
-        long[] probeList = random.longs(maxProbes,2, p.longValue()).toArray();
+        long[] probeList = random.longs(maxProbes,2, 7920).toArray();
         BigInteger calc, bdProbe, _2power;
 
         for(long probe: probeList) {
