@@ -2,6 +2,8 @@ package edu.boudoux.rsa;
 
 import edu.boudoux.utils.CryptographyUtils;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -69,7 +71,7 @@ public class SchoolBookRSA {
      * @param keySize The key size to be used in the modulo.
      * @return a Map.Entry instance containing a PubKey instance in as the key and a PrivKey instance as the value.
      */
-    public static Map.Entry<PubKey, PrivKey> generateKeyComponents(int keySize) {
+    public static Pair<PubKey, PrivKey> generateKeyComponents(int keySize) {
         if (! validateKeySize(keySize)) {
             throw new IllegalArgumentException("Invalid key size!");
         }
@@ -82,7 +84,7 @@ public class SchoolBookRSA {
 
         BigInteger d = generatePrivateComponent(e, totient);
 
-        return Map.entry(new PubKey(e, n), new PrivKey(d, n));
+        return ImmutablePair.of(new PubKey(e, n), new PrivKey(d, n));
     }
 
     private static boolean validateKeySize(int moduloSize) {

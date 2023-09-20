@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import edu.boudoux.utils.CryptographyUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -54,7 +55,7 @@ public class SchoolBookRSATest {
     @Test
     public void shouldPassForGeneratedValues_16bitsModuloSize() {
         for (int count = 1; count <= 10; count++) {
-            Map.Entry<SchoolBookRSA.PubKey, SchoolBookRSA.PrivKey> keys = SchoolBookRSA.generateKeyComponents(16);
+            Pair<SchoolBookRSA.PubKey, SchoolBookRSA.PrivKey> keys = SchoolBookRSA.generateKeyComponents(16);
             byte[] b = new byte[1];
             for (byte i = 0; i < 127; i++) {
                 b[0] = i;
@@ -75,7 +76,7 @@ public class SchoolBookRSATest {
             String expected = new String(b);
             int keySize = expected.getBytes(StandardCharsets.UTF_8).length * 8;
 
-            Map.Entry<SchoolBookRSA.PubKey, SchoolBookRSA.PrivKey> keyComp = SchoolBookRSA.generateKeyComponents(keySize);
+            Pair<SchoolBookRSA.PubKey, SchoolBookRSA.PrivKey> keyComp = SchoolBookRSA.generateKeyComponents(keySize);
 
             BigInteger cipherText = SchoolBookRSA.cipherPlainText(expected, keyComp.getKey().e(), keyComp.getKey().n());
             String plainText = SchoolBookRSA.decipher(cipherText, keyComp.getValue().d(), keyComp.getValue().n());
