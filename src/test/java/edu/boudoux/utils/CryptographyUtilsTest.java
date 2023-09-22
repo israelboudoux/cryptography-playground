@@ -64,9 +64,9 @@ public class CryptographyUtilsTest {
         }
 
         IntStream intStream = IntStream.range(4, first1000Primes.get(first1000Primes.size() - 1));
-        intStream.filter(n -> ! first1000Primes.contains(n)).forEach(n -> {
-            Assert.assertFalse(String.format("Test for non-primes failed for %d", n), isPrime2(BigInteger. valueOf(n)));
-        });
+        intStream.filter(n -> ! first1000Primes.contains(n)).forEach(n ->
+            Assert.assertFalse(String.format("Test for non-primes failed for %d", n), isPrime2(BigInteger.valueOf(n)))
+        );
     }
 
 }

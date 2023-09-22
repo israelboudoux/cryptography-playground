@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 public class SchoolBookRSATest {
 
@@ -74,19 +73,27 @@ public class SchoolBookRSATest {
         for (byte i = -128; i < 0; i++) {
             b[0] = i;
             String expected = new String(b);
-            int keySize = expected.getBytes(StandardCharsets.UTF_8).length * 8;
+            int moduloSize = expected.getBytes(StandardCharsets.UTF_8).length * 8 + 8; // adding 8bits to guarantee the modulo size supports the plain text
+            Pair<SchoolBookRSA.PubKey, SchoolBookRSA.PrivKey> keyComp = SchoolBookRSA.generateKeyComponents(moduloSize);
 
-            Pair<SchoolBookRSA.PubKey, SchoolBookRSA.PrivKey> keyComp = SchoolBookRSA.generateKeyComponents(keySize);
+            BigInteger cipherText = SchoolBookRSA.cipherPlainText(expected, keyComp.getKey().e(), keyComp.getKey().n());
+            String plainText = SchoolBookRSA.decipher(cipherText, keyComp.getValue().d(), keyComp.getValue().n());
+
+            assertEquals(String.format("Failed for iteration %d (n: %s, d: %s)", i, keyComp.getValue().n(), keyComp.getValue().d()), plainText, expected);
+        }
+    }
+
+    @Test
+    public void shouldPassForGeneratedValues_moduliFrom32To1024() {
+        for(int moduloSize = 32; moduloSize <= 1024; moduloSize += 8) {
+           Pair<SchoolBookRSA.PubKey, SchoolBookRSA.PrivKey> keyComp = SchoolBookRSA.generateKeyComponents(moduloSize);
+
+            String expected = new String(new byte[] {-128});
 
             BigInteger cipherText = SchoolBookRSA.cipherPlainText(expected, keyComp.getKey().e(), keyComp.getKey().n());
             String plainText = SchoolBookRSA.decipher(cipherText, keyComp.getValue().d(), keyComp.getValue().n());
 
             assertEquals(plainText, expected);
         }
-    }
-
-    @Test
-    public void shouldPassForGeneratedValues_32bitsModuloSize() {
-
     }
 }
