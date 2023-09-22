@@ -116,6 +116,10 @@ public class SchoolBookRSA {
     public static BigInteger cipherPlainText(String plainTextInput, BigInteger e, BigInteger n) {
         BigInteger text = CryptographyUtils.toBigInteger(plainTextInput);
 
+        if (CryptographyUtils.greaterThan(text, n)) {
+            throw new IllegalStateException("Plaintext value not supported for current modulo size. Try increasing the modulo size!");
+        }
+
         return CryptographyUtils.powerMod(text, e, n);
     }
 
