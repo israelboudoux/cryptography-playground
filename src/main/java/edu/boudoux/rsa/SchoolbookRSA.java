@@ -23,6 +23,11 @@ public class SchoolbookRSA {
     private static final Random RANDOMIZER = new SecureRandom();
 
     /**
+     * 512 bits min modulo value
+     */
+    private static final BigInteger MIN_MODULO_SIG = BigInteger.ONE.shiftLeft(511);
+
+    /**
      * This is the default 'e' selected, but it could be any prime number that satisfies
      * gcd(e, p-1) = 1 and gcd(e, q-1) = 1. A good thing is to use a number that has a small
      * amount of bits set, like 17 or 65537.
@@ -108,19 +113,23 @@ public class SchoolbookRSA {
      * Encrypts the plain text
      *
      * @param plainTextInput the plain text to encrypt
-     * @param e the public component 'e'
-     * @param n the public component 'n'
+     * @param key the key component
+     * @param n the modulo component
      *
      * @return the hexadecimal representation ciphered text
      */
-    public static String cipherPlainText(String plainTextInput, BigInteger e, BigInteger n) {
+    public static String cipherPlainText(String plainTextInput, BigInteger key, BigInteger n) {
+        if (plainTextInput == null || key == null || n == null) {
+            throw new IllegalArgumentException("Invalid parameter(s)!");
+        }
+
         BigInteger textRep = CryptographyUtils.toBigInteger(plainTextInput);
 
         if (CryptographyUtils.greaterThan(textRep, n)) {
             throw new IllegalStateException("Plaintext value not supported for current modulo size. Try increasing the modulo size!");
         }
 
-        BigInteger cipheredRep = CryptographyUtils.powerMod(textRep, e, n);
+        BigInteger cipheredRep = CryptographyUtils.powerMod(textRep, key, n);
 
         return cipheredRep.toString(16);
     }
@@ -129,40 +138,62 @@ public class SchoolbookRSA {
      * Decrypts the cipher text
      *
      * @param cipheredText the hexadecimal representation of the ciphered text
-     * @param privateKey the private component 'd'
-     * @param n the public component 'n'
+     * @param key the key component
+     * @param n the modulo component
      *
      * @return the plain text being represented by the cipher text, if all the params are correct
      */
-    public static String decipher(String cipheredText, BigInteger privateKey, BigInteger n) {
+    public static String decipher(String cipheredText, BigInteger key, BigInteger n) {
+        if (cipheredText == null || key == null || n == null) {
+            throw new IllegalArgumentException("Invalid parameter(s)!");
+        }
+
         BigInteger cipherTextRep = new BigInteger(cipheredText, 16);
-        BigInteger plainTextRep = CryptographyUtils.powerMod(cipherTextRep, privateKey, n);
+        BigInteger plainTextRep = CryptographyUtils.powerMod(cipherTextRep, key, n);
+
         return CryptographyUtils.toString(plainTextRep, n);
     }
 
     /**
      * Signs a message using RSA Algorithm.
      *
-     * @param message
-     * @param privateKey
-     * @param n
-     * @return
+     * @param message message to be signed
+     * @param privateKey the private key to sign the message
+     * @param n the modulo component. It must be at least 512bits long
+     * @return the hexadecimal representation string for the signed message
      */
-    public String sign(String message, BigInteger privateKey, BigInteger n) {
-        return null;
+    public static String sign(String message, BigInteger privateKey, BigInteger n) {
+        if (message == null || privateKey == null || n == null) {
+            throw new IllegalArgumentException("Invalid parameter(s)!");
+        }
+
+        if (CryptographyUtils.lowerThan(n, MIN_MODULO_SIG)) {
+            throw new IllegalArgumentException("Please, ensure the modulo has at least 512bits");
+        }
+
+        String hashedMessage = DigestUtils.sha1Hex(message);
+
+        return cipherPlainText(hashedMessage, privateKey, n);
     }
 
     /**
      * Verifies if the message matches with the message signed in messageSignature.
      *
-     * @param message
-     * @param messageSignature
-     * @param publicKey
-     * @param n
-     * @return
+     * @param message the message to be verified against the signature
+     * @param messageSignature the message signature
+     * @param publicKey the public key component
+     * @param n the modulo component
+     * @return true if the signature is valid for the presented message
      */
-    public boolean verify(String message, String messageSignature, BigInteger publicKey, BigInteger n) {
-        return false;
+    public static boolean verify(String message, String messageSignature, BigInteger publicKey, BigInteger n) {
+        if (message == null || messageSignature == null || publicKey == null || n == null) {
+            throw new IllegalArgumentException("Invalid parameter(s)!");
+        }
+
+        String hashedMessage = DigestUtils.sha1Hex(message);
+        String signedHashMessage = decipher(messageSignature, publicKey, n);
+
+        return hashedMessage.equals(signedHashMessage);
     }
 
     public static void main(String[] args) {

@@ -1,14 +1,13 @@
 package edu.boudoux.rsa;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import edu.boudoux.utils.CryptographyUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+
+import static org.junit.Assert.*;
 
 public class SchoolbookRSATest {
 
@@ -95,5 +94,25 @@ public class SchoolbookRSATest {
 
             assertEquals(plainText, expected);
         }
+    }
+
+    @Test
+    public void shouldPassForMessageCorrectlySigned() {
+        Pair<SchoolbookRSA.PubKey, SchoolbookRSA.PrivKey> keyComp = SchoolbookRSA.generateKeyComponents(512);
+
+        String message = "testing message...";
+        String signedMessage = SchoolbookRSA.sign(message, keyComp.getValue().d(), keyComp.getValue().n());
+
+        assertTrue(SchoolbookRSA.verify(message, signedMessage, keyComp.getKey().e(), keyComp.getKey().n()));
+    }
+
+    @Test
+    public void shouldFailForMessageChanged() {
+        Pair<SchoolbookRSA.PubKey, SchoolbookRSA.PrivKey> keyComp = SchoolbookRSA.generateKeyComponents(512);
+
+        String message = "I testify you own me $1000!";
+        String signedMessage = SchoolbookRSA.sign(message, keyComp.getValue().d(), keyComp.getValue().n());
+
+        assertFalse(SchoolbookRSA.verify("I testify you own me $100!", signedMessage, keyComp.getKey().e(), keyComp.getKey().n()));
     }
 }
