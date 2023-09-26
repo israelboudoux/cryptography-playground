@@ -15,7 +15,7 @@ import java.util.Scanner;
 import java.util.function.Predicate;
 import static edu.boudoux.utils.CryptographyUtils.*;
 
-public class SchoolBookRSA {
+public class SchoolbookRSA {
 
     public record PubKey (BigInteger e, BigInteger n) {}
     public record PrivKey (BigInteger d, BigInteger n) {}
@@ -111,34 +111,62 @@ public class SchoolBookRSA {
      * @param e the public component 'e'
      * @param n the public component 'n'
      *
-     * @return
+     * @return the hexadecimal representation ciphered text
      */
-    public static BigInteger cipherPlainText(String plainTextInput, BigInteger e, BigInteger n) {
-        BigInteger text = CryptographyUtils.toBigInteger(plainTextInput);
+    public static String cipherPlainText(String plainTextInput, BigInteger e, BigInteger n) {
+        BigInteger textRep = CryptographyUtils.toBigInteger(plainTextInput);
 
-        if (CryptographyUtils.greaterThan(text, n)) {
+        if (CryptographyUtils.greaterThan(textRep, n)) {
             throw new IllegalStateException("Plaintext value not supported for current modulo size. Try increasing the modulo size!");
         }
 
-        return CryptographyUtils.powerMod(text, e, n);
+        BigInteger cipheredRep = CryptographyUtils.powerMod(textRep, e, n);
+
+        return cipheredRep.toString(16);
     }
 
     /**
      * Decrypts the cipher text
      *
-     * @param cipheredText the ciphered text
+     * @param cipheredText the hexadecimal representation of the ciphered text
      * @param privateKey the private component 'd'
      * @param n the public component 'n'
      *
      * @return the plain text being represented by the cipher text, if all the params are correct
      */
-    public static String decipher(BigInteger cipheredText, BigInteger privateKey, BigInteger n) {
-        BigInteger plainTextRep = CryptographyUtils.powerMod(cipheredText, privateKey, n);
+    public static String decipher(String cipheredText, BigInteger privateKey, BigInteger n) {
+        BigInteger cipherTextRep = new BigInteger(cipheredText, 16);
+        BigInteger plainTextRep = CryptographyUtils.powerMod(cipherTextRep, privateKey, n);
         return CryptographyUtils.toString(plainTextRep, n);
     }
 
+    /**
+     * Signs a message using RSA Algorithm.
+     *
+     * @param message
+     * @param privateKey
+     * @param n
+     * @return
+     */
+    public String sign(String message, BigInteger privateKey, BigInteger n) {
+        return null;
+    }
+
+    /**
+     * Verifies if the message matches with the message signed in messageSignature.
+     *
+     * @param message
+     * @param messageSignature
+     * @param publicKey
+     * @param n
+     * @return
+     */
+    public boolean verify(String message, String messageSignature, BigInteger publicKey, BigInteger n) {
+        return false;
+    }
+
     public static void main(String[] args) {
-        System.out.println("*** School book RSA ***");
+        System.out.println("*** Schoolbook RSA ***");
 
         String totalBitsModuloInput = requestInput("Enter the Total Bits for the RSA modulo (min: 8/max: 1024): ", (String s) -> {
             try {
@@ -158,21 +186,20 @@ public class SchoolBookRSA {
         BigInteger n = keyComponents.getKey().n();
         BigInteger d = keyComponents.getValue().d();
 
-        BigInteger cipheredTextRep = cipherPlainText(plainTextInput, e, n);
-        String cipheredText = CryptographyUtils.toString(cipheredTextRep, n);
+        String cipheredText = cipherPlainText(plainTextInput, e, n);
 
         BigInteger plainTextRep = CryptographyUtils.toBigInteger(plainTextInput);
         System.out.printf("\nPlain text (int rep): %s\n\n", plainTextRep);
         System.out.printf("Public components [e: %s, n: %s]\n", e, n);
         System.out.printf("Private components [d: %s, n: %s]\n", d, n);
-        System.out.printf("Ciphered text: %s (int rep: %s)\n\n", cipheredText, cipheredTextRep);
+        System.out.printf("Ciphered text: %s\n\n", cipheredText);
 
         System.out.println("Deciphering...");
 
         // we will assume 'n' is already supplied, and the cipher text as well
         String privateKey = requestInput("\nEnter the private key (copy the 'd' component): ",
                 (String s) -> !s.isEmpty() && n.compareTo(BigInteger.valueOf(s.length())) > 0);
-        String plainText = decipher(cipheredTextRep, new BigInteger(privateKey), n);
+        String plainText = decipher(cipheredText, new BigInteger(privateKey), n);
 
         System.out.println("Plain text deciphered: " + plainText);
     }
