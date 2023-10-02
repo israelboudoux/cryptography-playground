@@ -16,7 +16,7 @@ public class SchoolbookRSATest {
         for (int i = 1; i <= 10_000; i++) {
             BigInteger primeCandidate = SchoolbookRSA.generatePrime(16, SchoolbookRSA.DEFAULT_E, null);
 
-            assertTrue(primeCandidate + " is not prime!!!", CryptographyUtils.isPrime2(primeCandidate));
+            assertTrue(primeCandidate + " is not prime!!!", CryptographyUtils.isPrime(primeCandidate));
         }
     }
 

@@ -1,10 +1,16 @@
 package edu.boudoux.utils;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Random;
 
 public final class CryptographyUtils {
+
+    private static final Random RANDOMIZER = new SecureRandom();
 
     /**
      * Implements Greatest Common Divisor using Euclid's Algorithm. Both operands must be positive.
@@ -93,18 +99,46 @@ public final class CryptographyUtils {
         return result;
     }
 
+    /**
+     * Tests if the first param is greater than the second one.
+     *
+     * @param a
+     * @param b
+     * @return
+     */
     public static boolean greaterThan(BigInteger a, BigInteger b) {
         return a.compareTo(b) > 0;
     }
 
+    /**
+     * Tests if the first param is lower than or equal to the second one.
+     *
+     * @param a
+     * @param b
+     * @return
+     */
     public static boolean lowerThanOrEqual(BigInteger a, BigInteger b) {
         return a.compareTo(b) <= 0;
     }
 
+    /**
+     * Tests if the first param is greater than or equal to the second one.
+     *
+     * @param a
+     * @param b
+     * @return
+     */
     public static boolean greaterThanOrEqual(BigInteger a, BigInteger b) {
         return a.compareTo(b) >= 0;
     }
 
+    /**
+     * Tests if the first param is lower than the second one.
+     *
+     * @param a
+     * @param b
+     * @return
+     */
     public static boolean lowerThan(BigInteger a, BigInteger b) {
         return a.compareTo(b) < 0;
     }
@@ -181,7 +215,7 @@ public final class CryptographyUtils {
      *
      * @return
      */
-    public static boolean isPrime2(BigInteger p) {
+    public static boolean isPrime(BigInteger p) {
         if (p.equals(BigInteger.TWO)) {
             return true;
         } else if ((p.and(BigInteger.ONE)).equals(BigInteger.ZERO)) { // are you an even number?
@@ -243,20 +277,6 @@ public final class CryptographyUtils {
         return result;
     }
 
-    /**
-     * Uses brute force by verifying if every positive element lower than the value has a MMI.
-     *
-     * @param value
-     * @return
-     */
-    public static boolean isPrime(long value) {
-        for (long i = 2; i < value; i++) {
-            if (mmi2(i,value) == -1) return false;
-        }
-
-        return true;
-    }
-
     public static BigInteger toBigInteger(String plainTextInput) {
         byte[] content = plainTextInput.getBytes(StandardCharsets.UTF_8);
         BigInteger text = BigInteger.ZERO;
@@ -285,5 +305,108 @@ public final class CryptographyUtils {
         } while(!value.equals(BigInteger.ZERO));
 
         return new String(content, 0, lastContentIndex, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Generates a prime having the total bits specified.
+     *
+     * @param totalBits
+     * @return
+     */
+    public static BigInteger generatePrime(int totalBits) {
+        if (totalBits < 8 || totalBits % 8 != 0) {
+            throw new IllegalArgumentException("totalBits is invalid");
+        }
+
+        // This enforces the full bits specified will be used - this number is an odd one
+        final BigInteger minBitsSet = new BigInteger(String.format("1%s1", "0".repeat(totalBits - 2)), 2);
+
+        BigInteger result;
+        do {
+            // sha1 = 160bits
+            String sha1Result = DigestUtils.sha1Hex(RANDOMIZER.nextLong() + "").repeat(1 + totalBits / 160);
+
+            // Picks only the totalBits MSB
+            final BigInteger generatedNumber = new BigInteger(sha1Result, 16).shiftRight(sha1Result.length() * 4 - totalBits);
+
+            result = minBitsSet.or(generatedNumber);
+            while (!isPrime(result)) {
+                result = result.add(BigInteger.TWO);
+            }
+        } while (result.bitLength() > totalBits); // prevents from generating higher values than the required
+
+        return result;
+    }
+
+    /**
+     * Generates a number in the range specified. The bound is non-inclusive.
+     *
+     * @param origin
+     * @param bound
+     * @return
+     */
+    public static BigInteger generateNumber(BigInteger origin, BigInteger bound) {
+        if (origin == null || bound == null || lowerThan(origin, BigInteger.ZERO)
+                || lowerThan(bound, origin)) {
+            throw new IllegalArgumentException("Invalid parameters");
+        }
+
+        String sha1Digest;
+        long r;
+        BigInteger result = BigInteger.ZERO;
+
+        for (int c = 1; c <= 10; c++) {
+            r = RANDOMIZER.nextLong();
+            sha1Digest = DigestUtils.sha1Hex(r + "" + c);
+            result = result.add(new BigInteger(sha1Digest, 16)).mod(bound);
+
+            if (lowerThan(result, origin)) {
+                result = origin;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * This method is ensured to work correctly only for prime numbers up to 32 bits. That stated, it only tests if
+     * a number is a generator for 2^32 elements in the group and returns it if so.
+     *
+     * @param p
+     * @return
+     */
+    public static BigInteger getGenerator(BigInteger p) {
+        if (p == null || p.equals(BigInteger.TWO) || ! isPrime(p)) {
+            throw new IllegalArgumentException("Invalid param");
+        }
+
+        boolean[] testingArray;
+        final int ARRAY_SIZE = Integer.MAX_VALUE;
+        BigInteger generator = BigInteger.ZERO;
+        boolean possibleGeneratorFound = false;
+
+        OUTER_LOOP:
+        while (! possibleGeneratorFound) {
+            testingArray = new boolean[ARRAY_SIZE];
+            generator = generateNumber(BigInteger.TWO, p);
+
+            for (int i = 0;
+                 i < ARRAY_SIZE
+                         && lowerThanOrEqual(BigInteger.valueOf(i), p.subtract(BigInteger.ONE));
+                 i++) {
+                BigInteger element = powerMod(generator, BigInteger.valueOf(i), p);
+                int arrIndex = element.hashCode() % ARRAY_SIZE;
+
+                if (testingArray[arrIndex]) {
+                    break OUTER_LOOP;
+                }
+
+                testingArray[arrIndex] = true;
+            }
+
+            possibleGeneratorFound = true;
+        }
+
+        return generator;
     }
 }
