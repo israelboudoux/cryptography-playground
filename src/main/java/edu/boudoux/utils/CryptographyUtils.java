@@ -232,7 +232,8 @@ public final class CryptographyUtils {
 
         int isPrime = 0x0;
         int maxProbes = 5;
-        long[] probeList = random.longs(maxProbes,2, 7920).toArray();
+        long bound = lowerThanOrEqual(p, BigInteger.valueOf(Long.MAX_VALUE)) ? p.longValue() : 7920;
+        long[] probeList = random.longs(maxProbes,2, bound).toArray();
         BigInteger calc, bdProbe, _2power;
 
         for(long probe: probeList) {
