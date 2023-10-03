@@ -1,12 +1,18 @@
 package edu.boudoux.utils;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.crypto.cipher.CryptoCipher;
+import org.apache.commons.crypto.cipher.CryptoCipherFactory;
+import org.apache.commons.crypto.utils.AES;
+import org.apache.commons.crypto.utils.Utils;
 
-import java.math.BigDecimal;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.util.Random;
+import java.util.*;
 
 public final class CryptographyUtils {
 
@@ -51,55 +57,6 @@ public final class CryptographyUtils {
     }
 
     /**
-     * This algorithm extends Euclid's to return the Modular Multiplicative Inverse (MMI) using Bezout's Identity.
-     * A GCD can be represented as a linear combination of the operands (GCD = aX + bY | X,Y are in the Z set),the X
-     * value it is the MMI between A and B.
-     *
-     * @param a
-     * @param b
-     * @return the (MMI) between A and B,otherwise returns -1,since the MMI only exists for _relatively prime_ operands.
-     */
-    public static long mmi2(long a,long b) {
-        assert b > 0;
-
-        long r = a % b;
-        long x = 1,y = (r - a) / b;
-        long a_1 = b,b_1 = r;
-
-        if (r == 0) return -1;
-
-        long x_1 = 0;
-        long y_1 = 0,y_2;
-
-        int i = 1;
-        while(b_1 != 0 && b_1 != 1) {
-            r = a_1 % b_1;
-            y_2 = (-a_1 + r) / b_1;
-
-            if (i++ % 2 == 0) {
-                x = x + y_2 * x_1;
-                y = y + y_2 * y_1;
-            } else {
-                x_1 = x_1 + y_2 * x;
-                y_1 = y_1 + y_2 * y;
-            }
-
-            a_1 = b_1;
-            b_1 = r;
-        }
-
-        if (b_1 != 1) return -1;
-
-        long result = (i - 1) % 2 == 0 ? x : x_1;
-
-        if (result < 0) {
-            return result + b;
-        }
-
-        return result;
-    }
-
-    /**
      * Tests if the first param is greater than the second one.
      *
      * @param a
@@ -141,6 +98,20 @@ public final class CryptographyUtils {
      */
     public static boolean lowerThan(BigInteger a, BigInteger b) {
         return a.compareTo(b) < 0;
+    }
+
+    public static BigInteger min(BigInteger a, BigInteger b) {
+        return a.compareTo(b) < 0 ? a : b;
+    }
+
+    public static BigInteger max(BigInteger a, BigInteger b) {
+        return a.compareTo(b) > 0 ? a : b;
+    }
+
+    public static long mod(long value, long modValue) {
+        if (value >= 0) return value % modValue;
+
+        return (-(-value % modValue) + modValue) % modValue;
     }
 
     public static BigInteger mmi2(BigInteger a, BigInteger b) {
@@ -370,8 +341,8 @@ public final class CryptographyUtils {
     }
 
     /**
-     * This method is ensured to work correctly only for prime numbers up to 32 bits. That stated, it only tests if
-     * a number is a generator for 2^32 elements in the group and returns it if so.
+     * This method only tests the generator for at maximum 1M elements in the group. So it is likely that the number returned
+     * isn't a generator for the cyclic group, but to a cyclic subgroup.
      *
      * @param p
      * @return
@@ -381,33 +352,89 @@ public final class CryptographyUtils {
             throw new IllegalArgumentException("Invalid param");
         }
 
-        boolean[] testingArray;
-        final int ARRAY_SIZE = Integer.MAX_VALUE;
-        BigInteger generator = BigInteger.ZERO;
+        final int MAX_ELEMENTS_TO_TEST = min(p.subtract(BigInteger.ONE), BigInteger.valueOf(1_000_000)).intValue();
+        Map<BigInteger, String> bigIntegerStringMap = new HashMap<>(MAX_ELEMENTS_TO_TEST);
+        BigInteger generator = BigInteger.TWO;
         boolean possibleGeneratorFound = false;
 
         OUTER_LOOP:
         while (! possibleGeneratorFound) {
-            testingArray = new boolean[ARRAY_SIZE];
-            generator = generateNumber(BigInteger.TWO, p);
+            bigIntegerStringMap.clear();
 
-            for (int i = 0;
-                 i < ARRAY_SIZE
-                         && lowerThanOrEqual(BigInteger.valueOf(i), p.subtract(BigInteger.ONE));
-                 i++) {
+            for (int i = 0; i < MAX_ELEMENTS_TO_TEST; i++) {
                 BigInteger element = powerMod(generator, BigInteger.valueOf(i), p);
-                int arrIndex = element.hashCode() % ARRAY_SIZE;
 
-                if (testingArray[arrIndex]) {
-                    break OUTER_LOOP;
+                if (bigIntegerStringMap.containsKey(element)) {
+                    generator = generator.add(BigInteger.ONE);
+                    continue OUTER_LOOP;
                 }
 
-                testingArray[arrIndex] = true;
+                bigIntegerStringMap.put(element, "");
             }
 
             possibleGeneratorFound = true;
         }
 
         return generator;
+    }
+
+    /**
+     * Performs the encryption of the message using AES.
+     *
+     * @param message
+     * @param secret
+     * @return
+     */
+    public static String aesEncryption(String message, String secret) {
+        secret = secret.substring(0, Math.min(16, secret.length()));
+
+        final SecretKeySpec key = AES.newSecretKeySpec(secret.getBytes(StandardCharsets.UTF_8));
+        final IvParameterSpec iv = new IvParameterSpec(secret.getBytes(StandardCharsets.UTF_8));
+
+        final Properties properties = new Properties();
+        properties.setProperty(CryptoCipherFactory.CLASSES_KEY, CryptoCipherFactory.CipherProvider.JCE.getClassName());
+
+        final String transform = AES.CBC_PKCS5_PADDING;
+        try (final CryptoCipher encipher = Utils.getCipherInstance(transform, properties)) {
+            final byte[] input = message.getBytes(StandardCharsets.UTF_8);
+            byte[] output = new byte[1024];
+
+            encipher.init(Cipher.ENCRYPT_MODE, key, iv);
+            int updateBytes = encipher.update(input, 0, input.length, output, 0);
+            int finalBytes = encipher.doFinal(input, 0, 0, output, updateBytes);
+
+            return new BigInteger(Arrays.copyOf(output, updateBytes + finalBytes)).toString(16);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Performs the decryption of the message using AES.
+     *
+     * @param cipherText
+     * @param secret
+     * @return
+     */
+    public static String aesDecryption(String cipherText, String secret) {
+        secret = secret.substring(0, Math.min(16, secret.length()));
+
+        final SecretKeySpec key = AES.newSecretKeySpec(secret.getBytes(StandardCharsets.UTF_8));
+        final IvParameterSpec iv = new IvParameterSpec(secret.getBytes(StandardCharsets.UTF_8));
+
+        final Properties properties = new Properties();
+        properties.setProperty(CryptoCipherFactory.CLASSES_KEY, CryptoCipherFactory.CipherProvider.JCE.getClassName());
+        final String transform = AES.CBC_PKCS5_PADDING;
+        try (final CryptoCipher decipher = Utils.getCipherInstance(transform, properties)) {
+            decipher.init(Cipher.DECRYPT_MODE, key, iv);
+            final byte[] decoded = new byte[1024];
+            byte[] messageBytes = new BigInteger(cipherText, 16).toByteArray();
+
+            decipher.doFinal(messageBytes, 0, messageBytes.length, decoded, 0);
+
+            return new String(Arrays.copyOf(decoded, messageBytes.length), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

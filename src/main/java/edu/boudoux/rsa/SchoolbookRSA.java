@@ -228,7 +228,7 @@ public class SchoolbookRSA {
         System.out.println("Deciphering...");
 
         // we will assume 'n' is already supplied, and the cipher text as well
-        String privateKey = requestInput("\nEnter the private key (copy the 'd' component): ",
+        String privateKey = requestInput("\nEnter the private key (copy & paste the 'd' component): ",
                 (String s) -> !s.isEmpty() && n.compareTo(BigInteger.valueOf(s.length())) > 0);
         String plainText = decipher(cipheredText, new BigInteger(privateKey), n);
 

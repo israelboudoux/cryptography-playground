@@ -106,8 +106,15 @@ public class CryptographyUtilsTest {
         FIRST_1000_PRIMES.stream().filter(p -> p > 3).forEach(p -> {
             BigInteger generator = CryptographyUtils.getGenerator(BigInteger.valueOf(p));
 
-            System.out.printf("Generator for prime %d is %s%n", p, generator);
+            System.out.printf("%d is likely to be one of the generators for the prime %s%n", generator, p);
         });
     }
 
+    @Test
+    public void shouldFindGeneratorFor32BitsPrime() {
+        BigInteger p = CryptographyUtils.generatePrime(32);
+        BigInteger generator = CryptographyUtils.getGenerator(p);
+
+        System.out.printf("%d is likely to be one of the generators for the prime %s%n", generator, p);
+    }
 }
