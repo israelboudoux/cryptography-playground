@@ -47,14 +47,14 @@ public class DiffieHellmanKeyExchange {
             System.out.printf("Hello! %s speaking here. I'm sending the following message to %s: %s%n", name, to.getName(), cipherText);
 
             // Sends the message along with its own PubKey
-            to.receiveMessage(cipherText, this.publicKey);
+            to.handleIncomingMessage(cipherText, this.publicKey);
         }
 
         private String digest(BigInteger value) {
             return DigestUtils.sha256Hex(value.toString());
         }
 
-        public void receiveMessage(String message, BigInteger partyPublicKey) {
+        private void handleIncomingMessage(String message, BigInteger partyPublicKey) {
             BigInteger secBigInteger = getPubKeyOrSecret(this.privateKey, partyPublicKey, this.p);
             String secretString = digest(secBigInteger);
 
@@ -108,7 +108,7 @@ public class DiffieHellmanKeyExchange {
         Pair<BigInteger, BigInteger> domainParameters = setup(16);
 
         /*
-         * In the second step the parts generates and exchange the Public Keys in order to extract the secret that will be
+         * In the second step the parts generate and exchange the Public Keys in order to extract the secret that will be
          * used to encrypt/decrypt messages by using a block cipher (e.g. DES, AES, etc.).
          */
         Actor alice = new Actor("Alice", domainParameters);
