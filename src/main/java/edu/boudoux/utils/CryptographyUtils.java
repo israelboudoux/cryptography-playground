@@ -108,12 +108,6 @@ public final class CryptographyUtils {
         return a.compareTo(b) > 0 ? a : b;
     }
 
-    public static long mod(long value, long modValue) {
-        if (value >= 0) return value % modValue;
-
-        return (-(-value % modValue) + modValue) % modValue;
-    }
-
     public static BigInteger mmi2(BigInteger a, BigInteger b) {
         assert greaterThan(b, BigInteger.ZERO);
 

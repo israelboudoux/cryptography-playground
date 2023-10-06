@@ -55,8 +55,8 @@ public class DiffieHellmanKeyExchange {
         }
 
         private void handleIncomingMessage(String message, BigInteger partyPublicKey) {
-            BigInteger secBigInteger = getPubKeyOrSecret(this.privateKey, partyPublicKey, this.p);
-            String secretString = digest(secBigInteger);
+            BigInteger secretBigInteger = getPubKeyOrSecret(this.privateKey, partyPublicKey, this.p);
+            String secretString = digest(secretBigInteger);
 
             String decryptedMessage = CryptographyUtils.aesDecryption(message, secretString);
 
