@@ -14,4 +14,23 @@ public class EllipticCurveCryptographyTests {
                 ecc.add(EllipticCurveCryptography.Point.of(BigInteger.valueOf(5), BigInteger.valueOf(16)),
                         EllipticCurveCryptography.Point.of(BigInteger.valueOf(5), BigInteger.ONE)));
     }
+
+    @Test
+    public void shouldAddTwoInfinityPoints() {
+        EllipticCurveCryptography ecc = new EllipticCurveCryptography(BigInteger.TWO, BigInteger.TWO, BigInteger.valueOf(17));
+
+        Assert.assertEquals(EllipticCurveCryptography.Point.INFINITY,
+                ecc.add(EllipticCurveCryptography.Point.INFINITY, EllipticCurveCryptography.Point.INFINITY));
+    }
+
+    @Test
+    public void shouldAddInfinityAndNonInfinityPoints() {
+        EllipticCurveCryptography ecc = new EllipticCurveCryptography(BigInteger.TWO, BigInteger.TWO, BigInteger.valueOf(17));
+        EllipticCurveCryptography.Point point = EllipticCurveCryptography.Point.of(BigInteger.valueOf(5), BigInteger.valueOf(16));
+
+        Assert.assertEquals(point,
+                ecc.add(EllipticCurveCryptography.Point.INFINITY, point));
+        Assert.assertEquals(point,
+                ecc.add(point, EllipticCurveCryptography.Point.INFINITY));
+    }
 }

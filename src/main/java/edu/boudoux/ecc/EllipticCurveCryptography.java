@@ -1,7 +1,5 @@
 package edu.boudoux.ecc;
 
-import edu.boudoux.utils.CryptographyUtils;
-
 import static edu.boudoux.utils.CryptographyUtils.*;
 
 import java.math.BigInteger;
@@ -80,15 +78,15 @@ public class EllipticCurveCryptography {
         }
     }
 
-    public boolean isOnCurve(Point p) {
-        return p.equals(Point.INFINITY)
-                || p.y().pow(2)
-                        .mod(p())
-                        .equals(
-                                p.x().pow(3)
-                                     .add(a().multiply(p.x()))
-                                     .add(b())
-                                     .mod(p()));
+    public boolean isNotOnCurve(Point p) {
+        return !p.equals(Point.INFINITY)
+                    && !p.y().pow(2)
+                             .mod(p())
+                             .equals(
+                                    p.x().pow(3)
+                                            .add(a().multiply(p.x()))
+                                            .add(b())
+                                            .mod(p()));
     }
 
     /**
@@ -147,6 +145,10 @@ public class EllipticCurveCryptography {
      * @return
      */
     public Point add(Point p1, Point p2) {
+        if (isNotOnCurve(p1) || isNotOnCurve(p2)) {
+            throw new IllegalArgumentException("Invalid points (not on curve)!");
+        }
+
         if (p1.equals(Point.INFINITY)) {
             return p2;
         } else if (p2.equals(Point.INFINITY)) {
@@ -179,8 +181,14 @@ public class EllipticCurveCryptography {
         return result;
     }
 
+    /**
+     * Depending on the 'p' number, this method can take ages to finish processing!
+     *
+     * @return
+     */
     public List<Point> findAllPoints() {
         final List<Point> result = new ArrayList<>();
+        final BigInteger minusOne = BigInteger.ONE.negate();
 
         result.add(Point.INFINITY);
 
@@ -195,10 +203,10 @@ public class EllipticCurveCryptography {
                 result.add(Point.of(x, BigInteger.ZERO));
             } else if (modXResult.equals(BigInteger.ONE)) {
                 result.add(Point.of(x, BigInteger.ONE));
-                result.add(Point.of(x, BigInteger.ONE.negate().add(p())));
+                result.add(Point.of(x, minusOne.add(p())));
             } else {
                 BigInteger y = calculateY(modXResult);
-                if (! y.equals(BigInteger.ONE.negate())) {
+                if (! y.equals(minusOne)) {
                     result.add(Point.of(x, y));
                     result.add(Point.of(x, y.negate().add(p())));
                 }
@@ -224,9 +232,10 @@ public class EllipticCurveCryptography {
     }
 
     public static void main(String[] args) {
-        EllipticCurveCryptography ecc = new EllipticCurveCryptography(BigInteger.TWO, BigInteger.TWO, BigInteger.valueOf(17));
+        EllipticCurveCryptography ecc = new EllipticCurveCryptography(BigInteger.TWO, BigInteger.TWO, BigInteger.valueOf(7919));
 
         List<Point> pointList = ecc.findAllPoints();
+        System.out.println("Total points found: " + pointList.size() + "\n");
         pointList.forEach(System.out::println);
     }
 }
