@@ -1,8 +1,13 @@
 package edu.boudoux.ecc;
 
+import edu.boudoux.utils.CryptographyUtils;
+
 import static edu.boudoux.utils.CryptographyUtils.*;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -27,9 +32,14 @@ public class EllipticCurveCryptography {
     private BigInteger p;
 
     public EllipticCurveCryptography(BigInteger a, BigInteger b, BigInteger p) {
-        if (a == null || p == null) {
+        if (a == null
+                || p == null
+                || ! isPrime(p)
+                || lowerThanOrEqual(p, BigInteger.valueOf(3))) {
             throw new IllegalArgumentException("Invalid parameters");
         }
+
+        // TODO calculate the discriminant!
 
         this.a = a;
         this.b = b != null ? b : BigInteger.ZERO;
@@ -136,7 +146,7 @@ public class EllipticCurveCryptography {
      * @param p2
      * @return
      */
-    private Point add(Point p1, Point p2) {
+    public Point add(Point p1, Point p2) {
         if (p1.equals(Point.INFINITY)) {
             return p2;
         } else if (p2.equals(Point.INFINITY)) {
@@ -169,11 +179,54 @@ public class EllipticCurveCryptography {
         return result;
     }
 
+    public List<Point> findAllPoints() {
+        final List<Point> result = new ArrayList<>();
+
+        result.add(Point.INFINITY);
+
+        BigInteger x = BigInteger.ZERO;
+        do {
+            BigInteger modXResult = x.pow(3)
+                            .add(a().multiply(x))
+                            .add(b())
+                            .mod(p());
+
+            if (modXResult.equals(BigInteger.ZERO)) {
+                result.add(Point.of(x, BigInteger.ZERO));
+            } else if (modXResult.equals(BigInteger.ONE)) {
+                result.add(Point.of(x, BigInteger.ONE));
+                result.add(Point.of(x, BigInteger.ONE.negate().add(p())));
+            } else {
+                BigInteger y = calculateY(modXResult);
+                if (! y.equals(BigInteger.ONE.negate())) {
+                    result.add(Point.of(x, y));
+                    result.add(Point.of(x, y.negate().add(p())));
+                }
+            }
+
+            x = x.add(BigInteger.ONE);
+        } while (lowerThan(x, p()));
+
+        return Collections.unmodifiableList(result);
+    }
+
+    private BigInteger calculateY(BigInteger r) {
+        BigInteger result = BigInteger.TWO;
+        do {
+            if (result.pow(2).mod(p()).equals(r)) {
+                return result;
+            }
+
+            result = result.add(BigInteger.ONE);
+        } while (lowerThan(result, p()));
+
+        return BigInteger.ONE.negate();
+    }
+
     public static void main(String[] args) {
         EllipticCurveCryptography ecc = new EllipticCurveCryptography(BigInteger.TWO, BigInteger.TWO, BigInteger.valueOf(17));
 
-        final Point generator = Point.of(BigInteger.valueOf(5), BigInteger.ONE);
-
-        System.out.println(ecc.add(BigInteger.valueOf(19), generator));
+        List<Point> pointList = ecc.findAllPoints();
+        pointList.forEach(System.out::println);
     }
 }
