@@ -33,4 +33,13 @@ public class EllipticCurveCryptographyTests {
         Assert.assertEquals(point,
                 ecc.add(point, EllipticCurveCryptography.Point.INFINITY));
     }
+
+    @Test
+    public void shouldReturnInfinityForPointWithNoMirror() {
+        EllipticCurveCryptography ecc = new EllipticCurveCryptography(BigInteger.TWO, BigInteger.TWO, BigInteger.valueOf(31));
+        EllipticCurveCryptography.Point noMirrorPoint = EllipticCurveCryptography.Point.of(BigInteger.valueOf(28), BigInteger.ZERO);
+
+        Assert.assertEquals(EllipticCurveCryptography.Point.INFINITY,
+                ecc.add(noMirrorPoint, noMirrorPoint));
+    }
 }
