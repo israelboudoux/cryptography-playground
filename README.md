@@ -4,6 +4,15 @@ In this playground I'll try to add some resources related to Cryptography. Mostl
 might be written in other languages like Typescript, Golang or Rust (if I have disposition for this :)).
 
 ## Resources
+# Data Encryption Standard (DES)
+...
+
+# Message Digest (MD)
+SHA-1...
+
+# Advanced Encryption System (AES)
+...
+
 # Schoolbook RSA
 Basically a Schoolbook RSA is an implementation that follows the steps to encrypt/decrypt data, but suffers from some vulnerabilities. Without applying padding, the algorithm may fall short against some attacks, like the following:
 If public exponents (_e_) and Plain Texts are small, raising the Plain Text by _e_ might not hit the modulo operation, which would allow an attacker to recover the Plain Text by applying the _e_-th root on the Ciphertext.
@@ -17,3 +26,28 @@ Tests for the resources related to this topic are under: 'test/java/src/edu/boud
 One can play with RSA by running the class 'main/java/src/edu/boudoux/rsa/SchoolBookRsa.java'. 
 
 Probably bugs are around. Let me know by raising an issue!
+
+# Diffie-Hellman Key Exchange (DHKE)
+This is one of the most used protocol for exchanging keys today.
+
+# Elliptic Curve Cryptography (ECC + ECDSA)
+
+# Digital Signature Algorithm (DSA)
+
+# Elgamal
+
+# Lattice
+
+# Homomorphic Encryption
+
+# Message Authentication Code (MAC)
+
+# Multiparty Computation (MPC)
+
+# Oblivious Encryption
+
+# Pairing
+
+# Shamir Secret Sharing
+
+# Zero-knowledge Proofs (ZKP)
