@@ -274,6 +274,20 @@ public final class CryptographyUtils {
     }
 
     /**
+     *
+     * @param bound non-inclusive
+     * @return
+     */
+    public static BigInteger generatePrime(BigInteger bound) {
+        BigInteger result;
+        do {
+            result = generatePrime(bound.bitLength());
+        } while (greaterThanOrEqual(result, bound));
+
+        return result;
+    }
+
+    /**
      * Generates a prime having the total bits specified.
      *
      * @param totalBits
@@ -370,6 +384,16 @@ public final class CryptographyUtils {
         }
 
         return generator;
+    }
+
+    /**
+     * Run a message digest using SHA-256
+     *
+     * @param value
+     * @return
+     */
+    public static String digest(String value) {
+        return DigestUtils.sha256Hex(value);
     }
 
     /**

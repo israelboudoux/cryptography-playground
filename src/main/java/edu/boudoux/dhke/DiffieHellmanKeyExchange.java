@@ -1,9 +1,10 @@
 package edu.boudoux.dhke;
 
 import edu.boudoux.utils.CryptographyUtils;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import java.math.BigInteger;
+
+import static edu.boudoux.utils.CryptographyUtils.*;
 
 public class DiffieHellmanKeyExchange {
 
@@ -41,7 +42,7 @@ public class DiffieHellmanKeyExchange {
             BigInteger destinationPublicKey = to.getPublicKey();
 
             BigInteger secretBigInteger = getPubKeyOrSecret(this.privateKey, destinationPublicKey, p);
-            String secretString = digest(secretBigInteger);
+            String secretString = digest(secretBigInteger.toString());
             String cipherText = CryptographyUtils.aesEncryption(message, secretString);
 
             System.out.printf("Hello! %s speaking here. I'm sending the following message to %s: %s%n", name, to.getName(), cipherText);
@@ -50,13 +51,9 @@ public class DiffieHellmanKeyExchange {
             to.handleIncomingMessage(cipherText, this.publicKey);
         }
 
-        private String digest(BigInteger value) {
-            return DigestUtils.sha256Hex(value.toString());
-        }
-
         private void handleIncomingMessage(String message, BigInteger partyPublicKey) {
             BigInteger secretBigInteger = getPubKeyOrSecret(this.privateKey, partyPublicKey, this.p);
-            String secretString = digest(secretBigInteger);
+            String secretString = digest(secretBigInteger.toString());
 
             String decryptedMessage = CryptographyUtils.aesDecryption(message, secretString);
 

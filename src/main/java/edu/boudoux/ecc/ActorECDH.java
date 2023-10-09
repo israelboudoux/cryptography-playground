@@ -1,7 +1,5 @@
 package edu.boudoux.ecc;
 
-import org.apache.commons.codec.digest.DigestUtils;
-
 import java.math.BigInteger;
 
 import static edu.boudoux.utils.CryptographyUtils.*;
@@ -41,15 +39,11 @@ public class ActorECDH {
         return publicKey;
     }
 
-    private String digest(BigInteger value) {
-        return DigestUtils.sha256Hex(value.toString());
-    }
-
     public void sendMessage(String message, ActorECDH recipient) {
         EllipticCurveCryptography.Point recipientPublicKey = recipient.getPublicKey();
         EllipticCurveCryptography.Point pointSecret = ecc.add(this.privateKey, recipientPublicKey);
 
-        String secretString = digest(pointSecret.x());
+        String secretString = digest(pointSecret.x().toString());
         String cipherText = aesEncryption(message, secretString);
 
         System.out.printf("Hello! %s speaking here. I'm sending the following message to %s: %s%n", name, recipient.getName(), cipherText);
@@ -60,7 +54,7 @@ public class ActorECDH {
 
     private void handleIncomingMessage(String message, EllipticCurveCryptography.Point partyPublicKey) {
         EllipticCurveCryptography.Point pointSecret = ecc.add(this.privateKey, partyPublicKey);
-        String secretString = digest(pointSecret.x());
+        String secretString = digest(pointSecret.x().toString());
 
         String decryptedMessage = aesDecryption(message, secretString);
 
