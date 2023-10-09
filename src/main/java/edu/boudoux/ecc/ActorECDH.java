@@ -6,7 +6,7 @@ import java.math.BigInteger;
 
 import static edu.boudoux.utils.CryptographyUtils.*;
 
-public class ActorECHD {
+public class ActorECDH {
     private String name;
 
     private DomainParameters domainParameters;
@@ -19,7 +19,7 @@ public class ActorECHD {
 
     public static record DomainParameters(BigInteger a, BigInteger b, BigInteger p, EllipticCurveCryptography.Point generator) {}
 
-    public ActorECHD(String name, DomainParameters domainParameters) {
+    public ActorECDH(String name, DomainParameters domainParameters) {
         this.name = name;
         this.domainParameters = domainParameters;
 
@@ -45,7 +45,7 @@ public class ActorECHD {
         return DigestUtils.sha256Hex(value.toString());
     }
 
-    public void sendMessage(String message, ActorECHD recipient) {
+    public void sendMessage(String message, ActorECDH recipient) {
         EllipticCurveCryptography.Point recipientPublicKey = recipient.getPublicKey();
         EllipticCurveCryptography.Point pointSecret = ecc.add(this.privateKey, recipientPublicKey);
 

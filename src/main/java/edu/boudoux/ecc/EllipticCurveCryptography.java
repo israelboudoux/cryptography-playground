@@ -261,10 +261,10 @@ public class EllipticCurveCryptography {
         EllipticCurveCryptography ecc = new EllipticCurveCryptography(a, b, p);
         List<Point> pointList = ecc.findAllPoints();
 
-        ActorECHD.DomainParameters domainParameters = new ActorECHD.DomainParameters(a, b, p, pointList.get(1));
+        ActorECDH.DomainParameters domainParameters = new ActorECDH.DomainParameters(a, b, p, pointList.get(1));
 
-        ActorECHD alice = new ActorECHD("Alice", domainParameters);
-        ActorECHD bob = new ActorECHD("Bob", domainParameters);
+        ActorECDH alice = new ActorECDH("Alice", domainParameters);
+        ActorECDH bob = new ActorECDH("Bob", domainParameters);
 
         String myMessage = "Hello world!";
 
