@@ -62,12 +62,12 @@ public class CryptographyUtilsTest {
     @Test
     public void testIsPrime() {
         for(int prime: FIRST_1000_PRIMES) {
-            Assert.assertTrue(String.format("Test for primes failed for %d", prime), isPrime(BigInteger.valueOf(prime)));
+            Assert.assertTrue(String.format("Test for primes failed for %d", prime), isProbablePrime(BigInteger.valueOf(prime)));
         }
 
         IntStream intStream = IntStream.range(4, FIRST_1000_PRIMES.get(FIRST_1000_PRIMES.size() - 1));
         intStream.filter(n -> ! FIRST_1000_PRIMES.contains(n)).forEach(n ->
-            Assert.assertFalse(String.format("Test for non-primes failed for %d", n), isPrime(BigInteger.valueOf(n)))
+            Assert.assertFalse(String.format("Test for non-primes failed for %d", n), isProbablePrime(BigInteger.valueOf(n)))
         );
     }
 
@@ -76,7 +76,7 @@ public class CryptographyUtilsTest {
         for (int i = 8; i <= 1024; i *= 2) {
             BigInteger genPrime = CryptographyUtils.generatePrime(i);
 
-            Assert.assertTrue(CryptographyUtils.isPrime(genPrime));
+            Assert.assertTrue(CryptographyUtils.isProbablePrime(genPrime));
         }
     }
 

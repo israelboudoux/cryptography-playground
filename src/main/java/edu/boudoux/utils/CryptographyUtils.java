@@ -180,7 +180,7 @@ public final class CryptographyUtils {
      *
      * @return
      */
-    public static boolean isPrime(BigInteger p) {
+    public static boolean isProbablePrime(BigInteger p) {
         if (p.equals(BigInteger.TWO)) {
             return true;
         } else if ((p.and(BigInteger.ONE)).equals(BigInteger.ZERO)) { // are you an even number?
@@ -296,7 +296,7 @@ public final class CryptographyUtils {
             final BigInteger generatedNumber = new BigInteger(sha1Result, 16).shiftRight(sha1Result.length() * 4 - totalBits);
 
             result = minBitsSet.or(generatedNumber);
-            while (!isPrime(result)) {
+            while (!isProbablePrime(result)) {
                 result = result.add(BigInteger.TWO);
             }
         } while (result.bitLength() > totalBits); // prevents from generating higher values than the required
@@ -342,7 +342,7 @@ public final class CryptographyUtils {
      * @return
      */
     public static BigInteger getGenerator(BigInteger p) {
-        if (p == null || p.equals(BigInteger.TWO) || ! isPrime(p)) {
+        if (p == null || p.equals(BigInteger.TWO) || ! isProbablePrime(p)) {
             throw new IllegalArgumentException("Invalid param");
         }
 

@@ -62,7 +62,7 @@ public class SchoolbookRSA {
             String randomNumber = shaResult.substring(0, totalBits);
 
             genPrime = initialValue.xor(new BigInteger(randomNumber, 16).and(totalBitsSet));
-        } while (!isPrime(genPrime)
+        } while (!isProbablePrime(genPrime)
                     || !gcd(e, genPrime.subtract(BigInteger.ONE)).equals(BigInteger.ONE)
                     || genPrime.equals(otherThan));
 

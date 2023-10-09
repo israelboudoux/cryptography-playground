@@ -28,18 +28,26 @@ public class EllipticCurveCryptography {
     private BigInteger p;
 
     public EllipticCurveCryptography(BigInteger a, BigInteger b, BigInteger p) {
-        if (a == null
-                || p == null
-                || ! isPrime(p)
+        if (p == null
+                || ! isProbablePrime(p)
                 || lowerThanOrEqual(p, BigInteger.valueOf(3))) {
             throw new IllegalArgumentException("Invalid parameters");
         }
 
-        // TODO calculate the discriminant!
+        a = a != null ? a : BigInteger.ZERO;
+        b = b != null ? b : BigInteger.ZERO;
+
+        if (discriminant(a, b).equals(BigInteger.ZERO)) {
+            throw new IllegalArgumentException("Discriminant is zero - the chosen parameters aren't good for use in elliptic curve cryptography");
+        }
 
         this.a = a;
-        this.b = b != null ? b : BigInteger.ZERO;
+        this.b = b;
         this.p = p;
+    }
+
+    private BigInteger discriminant(BigInteger a, BigInteger b) {
+        return BigInteger.valueOf(4).multiply(a.pow(3)).add(BigInteger.valueOf(27).multiply(b.pow(2)));
     }
 
     public BigInteger a() {
@@ -246,10 +254,20 @@ public class EllipticCurveCryptography {
     }
 
     public static void main(String[] args) {
-        EllipticCurveCryptography ecc = new EllipticCurveCryptography(BigInteger.TWO, BigInteger.TWO, BigInteger.valueOf(17));
+        BigInteger p = generatePrime(8);
+        BigInteger a = BigInteger.TWO;
+        BigInteger b = BigInteger.TWO;
 
+        EllipticCurveCryptography ecc = new EllipticCurveCryptography(a, b, p);
         List<Point> pointList = ecc.findAllPoints();
-        System.out.println("Total points found: " + pointList.size() + "\n");
-        pointList.forEach(System.out::println);
+
+        ActorECHD.DomainParameters domainParameters = new ActorECHD.DomainParameters(a, b, p, pointList.get(1));
+
+        ActorECHD alice = new ActorECHD("Alice", domainParameters);
+        ActorECHD bob = new ActorECHD("Bob", domainParameters);
+
+        String myMessage = "Hello world!";
+
+        alice.sendMessage(myMessage, bob);
     }
 }
