@@ -1,22 +1,22 @@
 package edu.boudoux.elgamal;
 
 import edu.boudoux.utils.CryptographyUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 
 import static edu.boudoux.utils.CryptographyUtils.*;
 
 public class ElgamalEncryption {
 
-    public static record PublicKey (BigInteger p, BigInteger generator, BigInteger publicKey) {}
+    public static record DomainParameters(BigInteger p, BigInteger generator, BigInteger publicKey) {}
 
     public static class Actor {
-        private String name;
+        private final String name;
 
-        private BigInteger privateKey;
+        private final BigInteger privateKey;
 
-        private PublicKey publicKey;
+        private final DomainParameters publicKey;
 
         public Actor(String name) {
             this.name = name;
@@ -27,14 +27,14 @@ public class ElgamalEncryption {
             BigInteger publicKey = powerMod(g, privateKey, p);
 
             this.privateKey = privateKey;
-            this.publicKey = new PublicKey(p, g, publicKey);
+            this.publicKey = new DomainParameters(p, g, publicKey);
         }
 
         public String getName() {
             return name;
         }
 
-        public PublicKey getPublicKey() {
+        public DomainParameters getPublicKey() {
             return publicKey;
         }
 
@@ -43,7 +43,7 @@ public class ElgamalEncryption {
         }
 
         public void sendMessage(String message, Actor recipient) {
-            PublicKey recipientPublicKey = recipient.getPublicKey();
+            DomainParameters recipientPublicKey = recipient.getPublicKey();
             BigInteger messageBigIntRep = toBigInteger(message);
 
             if (greaterThanOrEqual(messageBigIntRep, recipientPublicKey.p())) {
@@ -80,6 +80,53 @@ public class ElgamalEncryption {
                     ", publicKey=" + publicKey +
                     '}';
         }
+    }
+
+    public static Pair<BigInteger, DomainParameters> generateKeyForSigning() {
+        BigInteger p = generatePrime(128);
+        BigInteger g = getGenerator(p);
+        BigInteger privateKey = generateNumber(BigInteger.TWO, p.subtract(BigInteger.ONE));
+        BigInteger publicKey = powerMod(g, privateKey, p);
+
+        return Pair.of(privateKey, new DomainParameters(p, g, publicKey));
+    }
+
+    public static Pair<BigInteger, BigInteger> sign(String message, BigInteger privateKey, DomainParameters domainParameters) {
+        BigInteger messageBigIntRep = toBigInteger(message);
+
+        if (greaterThanOrEqual(messageBigIntRep, domainParameters.p())) {
+            throw new IllegalArgumentException(String.format("Too big message for the current setup (max bits: %d)", domainParameters.p().bitLength()));
+        }
+
+        BigInteger pMinusOne = domainParameters.p().subtract(BigInteger.ONE);
+        BigInteger ephemeralKey = generateEphemeralKeyForSigning(pMinusOne);
+        BigInteger ephemeralKeyInverse = mmi2(ephemeralKey, pMinusOne);
+        BigInteger r = powerMod(domainParameters.generator(), ephemeralKey, domainParameters.p());
+        BigInteger s = messageBigIntRep.subtract(privateKey.multiply(r))
+                .multiply(ephemeralKeyInverse)
+                .mod(pMinusOne);
+
+        return Pair.of(r, s);
+    }
+
+    public static BigInteger generateEphemeralKeyForSigning(BigInteger modulo) {
+        BigInteger result;
+        do {
+            result = generateNumber(BigInteger.TWO, modulo);
+        } while (! gcd(result, modulo).equals(BigInteger.ONE));
+
+        return result;
+    }
+
+    public static boolean verify(String message, DomainParameters domainParameters, Pair<BigInteger, BigInteger> signature) {
+        BigInteger r = signature.getLeft();
+        BigInteger s = signature.getRight();
+        BigInteger p = domainParameters.p();
+        BigInteger t = powerMod(domainParameters.publicKey(), r, p).multiply(powerMod(r, s, p)).mod(p);
+
+        BigInteger messageBigIntRep = toBigInteger(message);
+
+        return t.equals(powerMod(domainParameters.generator(), messageBigIntRep, p));
     }
 
     public static void main(String[] args) {
