@@ -28,7 +28,7 @@ One can play with RSA by running the class 'main/java/src/edu/boudoux/rsa/School
 Probably bugs are around. Let me know by raising an issue!
 
 # Diffie-Hellman Key Exchange (DHKE)
-This is one of the most used protocol for exchanging keys today.
+This is one of the most used protocol for exchanging keys...
 
 # Elliptic Curve Cryptography (ECC + ECDSA)
 
