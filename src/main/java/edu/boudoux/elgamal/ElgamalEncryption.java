@@ -1,6 +1,7 @@
 package edu.boudoux.elgamal;
 
 import edu.boudoux.utils.CryptographyUtils;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigInteger;
@@ -8,6 +9,8 @@ import java.math.BigInteger;
 import static edu.boudoux.utils.CryptographyUtils.*;
 
 public class ElgamalEncryption {
+
+    private static final int MODULO_BITS = 128; // For a good security level, this would need to be at least 1024 bits
 
     public static record DomainParameters(BigInteger p, BigInteger generator, BigInteger publicKey) {}
 
@@ -21,7 +24,7 @@ public class ElgamalEncryption {
         public Actor(String name) {
             this.name = name;
 
-            BigInteger p = generatePrime(128); // For a good security, this would need to be at least 1024 bits
+            BigInteger p = generatePrime(MODULO_BITS);
             BigInteger g = getGenerator(p);
             BigInteger privateKey = generateNumber(BigInteger.TWO, p.subtract(BigInteger.ONE));
             BigInteger publicKey = powerMod(g, privateKey, p);
@@ -83,7 +86,7 @@ public class ElgamalEncryption {
     }
 
     public static Pair<BigInteger, DomainParameters> generateKeyForSigning() {
-        BigInteger p = generatePrime(128);
+        BigInteger p = generatePrime(MODULO_BITS);
         BigInteger g = getGenerator(p);
         BigInteger privateKey = generateNumber(BigInteger.TWO, p.subtract(BigInteger.ONE));
         BigInteger publicKey = powerMod(g, privateKey, p);
@@ -91,12 +94,15 @@ public class ElgamalEncryption {
         return Pair.of(privateKey, new DomainParameters(p, g, publicKey));
     }
 
-    public static Pair<BigInteger, BigInteger> sign(String message, BigInteger privateKey, DomainParameters domainParameters) {
-        BigInteger messageBigIntRep = toBigInteger(message);
+    public static String digest(String message) {
+        String messageDigest = DigestUtils.sha1Hex(message);
 
-        if (greaterThanOrEqual(messageBigIntRep, domainParameters.p())) {
-            throw new IllegalArgumentException(String.format("Too big message for the current setup (max bits: %d)", domainParameters.p().bitLength()));
-        }
+        return MODULO_BITS > messageDigest.length() * 4 ? messageDigest : messageDigest.substring(0, messageDigest.length() / 4 - 1);
+    }
+
+    public static Pair<BigInteger, BigInteger> sign(String message, BigInteger privateKey, DomainParameters domainParameters) {
+        String messageDigest = digest(message);
+        BigInteger messageBigIntRep = new BigInteger(messageDigest, 16);
 
         BigInteger pMinusOne = domainParameters.p().subtract(BigInteger.ONE);
         BigInteger ephemeralKey = generateEphemeralKeyForSigning(pMinusOne);
@@ -124,7 +130,8 @@ public class ElgamalEncryption {
         BigInteger p = domainParameters.p();
         BigInteger t = powerMod(domainParameters.publicKey(), r, p).multiply(powerMod(r, s, p)).mod(p);
 
-        BigInteger messageBigIntRep = toBigInteger(message);
+        String messageDigest = digest(message);
+        BigInteger messageBigIntRep = new BigInteger(messageDigest, 16);
 
         return t.equals(powerMod(domainParameters.generator(), messageBigIntRep, p));
     }
