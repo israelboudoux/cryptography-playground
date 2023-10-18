@@ -364,8 +364,9 @@ public final class CryptographyUtils {
             throw new IllegalArgumentException("Invalid params");
         }
 
-        final int MAX_ELEMENTS_TO_TEST = min(targetOrder, BigInteger.valueOf(1_000_000)).intValue();
-        Map<BigInteger, String> bigIntegerStringMap = new HashMap<>(MAX_ELEMENTS_TO_TEST);
+        final int MAX_LIMIT = 1_000_000;
+        final int MAX_ELEMENTS_TO_TEST = min(targetOrder, BigInteger.valueOf(MAX_LIMIT)).intValue();
+        final Map<BigInteger, String> bigIntegerStringMap = new HashMap<>(MAX_ELEMENTS_TO_TEST);
         BigInteger generator = BigInteger.TWO;
         boolean possibleGeneratorFound = false;
 
@@ -385,7 +386,9 @@ public final class CryptographyUtils {
             }
 
             BigInteger element = powerMod(generator, BigInteger.valueOf(MAX_ELEMENTS_TO_TEST), modP);
-            if (! bigIntegerStringMap.containsKey(element)) {
+
+            // this tests for the case that a primitive element for a subgroup of a certain order is requested
+            if (MAX_ELEMENTS_TO_TEST < MAX_LIMIT && ! bigIntegerStringMap.containsKey(element)) {
                 generator = generator.add(BigInteger.ONE);
                 continue;
             }

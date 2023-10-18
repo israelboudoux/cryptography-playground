@@ -70,7 +70,7 @@ public class DiffieHellmanKeyExchange {
     public static Pair<BigInteger, BigInteger> setup(int totalBits) {
         final BigInteger p = CryptographyUtils.generatePrime(totalBits);
 
-        final BigInteger generator = CryptographyUtils.getGenerator(p, p);
+        final BigInteger generator = CryptographyUtils.getGenerator(p, p.subtract(BigInteger.ONE));
 
         return Pair.of(p, generator);
     }
