@@ -104,7 +104,8 @@ public class CryptographyUtilsTest {
     @Test
     public void shouldFindGeneratorForSmallPrimes() {
         FIRST_1000_PRIMES.stream().filter(p -> p > 3).forEach(p -> {
-            BigInteger generator = CryptographyUtils.getGenerator(BigInteger.valueOf(p));
+            BigInteger modP = BigInteger.valueOf(p);
+            BigInteger generator = CryptographyUtils.getGenerator(modP, modP);
 
             System.out.printf("%d is likely to be one of the generators for the prime %s%n", generator, p);
         });
@@ -113,7 +114,7 @@ public class CryptographyUtilsTest {
     @Test
     public void shouldFindGeneratorFor32BitsPrime() {
         BigInteger p = CryptographyUtils.generatePrime(32);
-        BigInteger generator = CryptographyUtils.getGenerator(p);
+        BigInteger generator = CryptographyUtils.getGenerator(p, p);
 
         System.out.printf("%d is likely to be one of the generators for the prime %s%n", generator, p);
     }

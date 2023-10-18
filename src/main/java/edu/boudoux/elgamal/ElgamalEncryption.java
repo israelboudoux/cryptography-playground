@@ -25,7 +25,7 @@ public class ElgamalEncryption {
             this.name = name;
 
             BigInteger p = generatePrime(MODULO_BITS);
-            BigInteger g = getGenerator(p);
+            BigInteger g = getGenerator(p, p);
             BigInteger privateKey = generateNumber(BigInteger.TWO, p.subtract(BigInteger.ONE));
             BigInteger publicKey = powerMod(g, privateKey, p);
 
@@ -87,7 +87,7 @@ public class ElgamalEncryption {
 
     public static Pair<BigInteger, DomainParameters> generateKeyForSigning() {
         BigInteger p = generatePrime(MODULO_BITS);
-        BigInteger g = getGenerator(p);
+        BigInteger g = getGenerator(p, p);
         BigInteger privateKey = generateNumber(BigInteger.TWO, p.subtract(BigInteger.ONE));
         BigInteger publicKey = powerMod(g, privateKey, p);
 

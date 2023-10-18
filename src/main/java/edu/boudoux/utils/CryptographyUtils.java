@@ -160,7 +160,6 @@ public final class CryptographyUtils {
      */
     public static BigInteger powerMod(BigInteger base, BigInteger power, BigInteger mod) {
         BigInteger result = new BigInteger("1");
-        long originalPower = power.longValue();
 
         while (greaterThan(power, BigInteger.ZERO)) {
             if (power.and(BigInteger.ONE).equals(BigInteger.ONE)) {
@@ -198,7 +197,7 @@ public final class CryptographyUtils {
         int isPrime = 0x0;
         int maxProbes = 5;
         long bound = lowerThanOrEqual(p, BigInteger.valueOf(Long.MAX_VALUE)) ? p.longValue() : 7920;
-        long[] probeList = random.longs(maxProbes,2, bound).toArray();
+        long[] probeList = random.longs(maxProbes,2, Math.max(bound, 3)).toArray();
         BigInteger calc, bdProbe, _2power;
 
         for(long probe: probeList) {
@@ -274,15 +273,19 @@ public final class CryptographyUtils {
     }
 
     /**
+     * Generates a prime that fits into the supplied intervals (minOpenBound < result < maxOpenBound).
      *
-     * @param bound non-inclusive
+     * @param minOpenBound non-inclusive
+     * @param maxOpenBound non-inclusive
      * @return
      */
-    public static BigInteger generatePrime(BigInteger bound) {
-        BigInteger result;
-        do {
-            result = generatePrime(bound.bitLength());
-        } while (greaterThanOrEqual(result, bound));
+    public static BigInteger generatePrimeOpenBounds(BigInteger minOpenBound, BigInteger maxOpenBound) {
+        BigInteger result = generatePrime(minOpenBound.bitLength());
+        while (! isProbablePrime(result)
+                || ! greaterThan(result, minOpenBound)
+                || ! lowerThan(result, maxOpenBound)) {
+            result = result.add(BigInteger.TWO);
+        }
 
         return result;
     }
@@ -294,7 +297,7 @@ public final class CryptographyUtils {
      * @return
      */
     public static BigInteger generatePrime(int totalBits) {
-        if (totalBits < 8 || totalBits % 8 != 0) {
+        if (totalBits < 8) {
             throw new IllegalArgumentException("totalBits is invalid");
         }
 
@@ -350,17 +353,18 @@ public final class CryptographyUtils {
 
     /**
      * This method only tests the generator for at maximum 1M elements in the group. So it is likely that the number returned
-     * isn't a generator for the cyclic group, but to a cyclic subgroup.
+     * isn't a generator for the intended target order.
      *
-     * @param p
+     * @param modP
+     * @param targetOrder
      * @return
      */
-    public static BigInteger getGenerator(BigInteger p) {
-        if (p == null || p.equals(BigInteger.TWO) || ! isProbablePrime(p)) {
-            throw new IllegalArgumentException("Invalid param");
+    public static BigInteger getGenerator(BigInteger modP, BigInteger targetOrder) {
+        if (modP == null || targetOrder == null || modP.equals(BigInteger.TWO) || ! isProbablePrime(modP)) {
+            throw new IllegalArgumentException("Invalid params");
         }
 
-        final int MAX_ELEMENTS_TO_TEST = min(p.subtract(BigInteger.ONE), BigInteger.valueOf(1_000_000)).intValue();
+        final int MAX_ELEMENTS_TO_TEST = min(targetOrder, BigInteger.valueOf(1_000_000)).intValue();
         Map<BigInteger, String> bigIntegerStringMap = new HashMap<>(MAX_ELEMENTS_TO_TEST);
         BigInteger generator = BigInteger.TWO;
         boolean possibleGeneratorFound = false;
@@ -370,7 +374,7 @@ public final class CryptographyUtils {
             bigIntegerStringMap.clear();
 
             for (int i = 0; i < MAX_ELEMENTS_TO_TEST; i++) {
-                BigInteger element = powerMod(generator, BigInteger.valueOf(i), p);
+                BigInteger element = powerMod(generator, BigInteger.valueOf(i), modP);
 
                 if (bigIntegerStringMap.containsKey(element)) {
                     generator = generator.add(BigInteger.ONE);
@@ -378,6 +382,12 @@ public final class CryptographyUtils {
                 }
 
                 bigIntegerStringMap.put(element, "");
+            }
+
+            BigInteger element = powerMod(generator, BigInteger.valueOf(MAX_ELEMENTS_TO_TEST), modP);
+            if (! bigIntegerStringMap.containsKey(element)) {
+                generator = generator.add(BigInteger.ONE);
+                continue;
             }
 
             possibleGeneratorFound = true;
