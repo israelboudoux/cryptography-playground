@@ -6,9 +6,11 @@ might be written in other languages like Typescript, Golang or Rust (if I have d
 ## Resources
 # Data Encryption Standard (DES)
 ...
+The code for DES can be found under 'main/java/src/edu/boudoux/des'.
 
 # Message Digest (MD)
-SHA-1...
+...
+The code for one of the MD algorithms (SHA-1) can be found under 'main/java/src/edu/boudoux/messageDigest'.
 
 # Schoolbook RSA
 Basically a Schoolbook RSA is an implementation that follows the steps to encrypt/decrypt data, but suffers from some vulnerabilities. Without applying padding, the algorithm may fall short against some attacks, like the following:
@@ -42,6 +44,11 @@ where it is used as the engine of the Proof of Work.
 The paper about Hashcash can be found at http://www.hashcash.org/papers/hashcash.pdf
 
 The sample code for Hashcash can be found under 'main/java/src/edu/boudoux/proofOfWork'.
+
+# Merkle Tree
+...
+
+The sample code for Hashcash can be found under 'main/java/src/edu/boudoux/merkleTree'.
 
 # Message Authentication Code (MAC)
 
