@@ -5,7 +5,14 @@ might be written in other languages like Typescript, Golang or Rust (if I have d
 
 ## Resources
 # Data Encryption Standard (DES)
-...
+This is an implementation of the Data Encryption Standard (DES). It isn't fully validated yet, since the Validation Test
+is still failing. Anyway, even after the Validation Test passes, this code isn't recommended for production use and this
+algorithm is not considered safe because its short key length isn't enough to prevent brute-force attacks.
+
+The implementation of this algorithm was followed using the instructions from the book "Understanding Cryptography - by Christof Paarjan Pelzl"
+
+This is still a Work in Progress!
+
 The code for DES can be found under 'main/java/src/edu/boudoux/des'.
 
 # Message Digest (MD)
@@ -55,6 +62,8 @@ The sample code for Hashcash can be found under 'main/java/src/edu/boudoux/proof
 The sample code for Hashcash can be found under 'main/java/src/edu/boudoux/merkleTree'.
 
 # Message Authentication Code (MAC)
+...
+The sample code for MAC can be found under 'main/java/src/edu/boudoux/mac'.
 
 # Shamir Secret Sharing
 
