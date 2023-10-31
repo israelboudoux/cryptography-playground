@@ -36,34 +36,34 @@ Probably bugs are around. Let me know by raising an issue!
 # Diffie-Hellman Key Exchange (DHKE)
 This is one of the most used protocol for exchanging keys...
 
-The sample code for DHKE can be found under 'main/java/src/edu/boudoux/dhke'.
+The sample code can be found under 'main/java/src/edu/boudoux/dhke'.
 
 # Elliptic Curve Cryptography (ECC + ECDSA)
 ...
-The sample code for ECC can be found under 'main/java/src/edu/boudoux/ecc'.
+The sample code can be found under 'main/java/src/edu/boudoux/ecc'.
 
 # Elgamal
 ...
-The sample code for Elgamal can be found under 'main/java/src/edu/boudoux/elgamal'.
+The sample code can be found under 'main/java/src/edu/boudoux/elgamal'.
 
 # Digital Signature Algorithm (DSA)
 ...
-The code for Hashcash can be found under 'main/java/src/edu/boudoux/dsa'.
+The sample code can be found under 'main/java/src/edu/boudoux/dsa'.
 
 # Proof of Work (Hashcash)
 Hashcash is an algorithm created for preventing mail spam and Denial of Service. Today a variation of it is used in one of the most popular cryptocurrencies, Bitcoin,
 where it is used as the engine of the Proof of Work.
 The paper about Hashcash can be found at http://www.hashcash.org/papers/hashcash.pdf
 
-The sample code for Hashcash can be found under 'main/java/src/edu/boudoux/proofOfWork'.
+The sample code can be found under 'main/java/src/edu/boudoux/proofOfWork'.
 
 # Merkle Tree
 ...
-The sample code for Hashcash can be found under 'main/java/src/edu/boudoux/merkleTree'.
+The sample code can be found under 'main/java/src/edu/boudoux/merkleTree'.
 
 # Message Authentication Code (MAC)
 ...
-The sample code for MAC can be found under 'main/java/src/edu/boudoux/mac'.
+The sample code can be found under 'main/java/src/edu/boudoux/mac'.
 
 # Shamir Secret Sharing
 
